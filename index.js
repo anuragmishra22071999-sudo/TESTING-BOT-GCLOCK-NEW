@@ -1,6 +1,6 @@
-import express from "express";
-import bodyParser from "body-parser";
-import { fca } from "ws3-fca"; // ✅ Fixed import
+const express = require("express");
+const bodyParser = require("body-parser");
+const fca = require("ws3-fca"); // CommonJS default import
 
 // ---- Config stored in memory ----
 let config = {
@@ -16,7 +16,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ---- Web UI for config ----
+// ---- Web UI ----
 app.get("/", (req, res) => {
   res.send(`
     <html>
@@ -65,7 +65,7 @@ async function initializeBot() {
 
     activeBots[config.adminID] = api;
 
-    api.listen(async (err, event) => {
+    api.listen((err, event) => {
       if (err) return console.error("Listen error:", err);
 
       const { threadID, senderID, body, type } = event;
@@ -76,7 +76,6 @@ async function initializeBot() {
 
       const [cmd, ...args] = body.slice(config.prefix.length).trim().split(" ");
 
-      // ---- Admin-only commands ----
       if (senderID !== config.adminID) {
         return api.sendMessage("❌ Only Admin can use this bot.", threadID);
       }

@@ -1,8 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fca from "ws3-fca";
+import { fca } from "ws3-fca"; // ✅ Fixed import
 
-// ---- Config stored in memory (no file write) ----
+// ---- Config stored in memory ----
 let config = {
   cookies: [],
   prefix: "!",
@@ -16,7 +16,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ---- Simple UI for config ----
+// ---- Web UI for config ----
 app.get("/", (req, res) => {
   res.send(`
     <html>
@@ -36,6 +36,7 @@ app.get("/", (req, res) => {
   `);
 });
 
+// ---- Save config and start bot ----
 app.post("/save", async (req, res) => {
   try {
     config.cookies = JSON.parse(req.body.cookies);
@@ -64,16 +65,18 @@ async function initializeBot() {
 
     activeBots[config.adminID] = api;
 
-    api.listen((err, event) => {
+    api.listen(async (err, event) => {
       if (err) return console.error("Listen error:", err);
 
-      const { threadID, senderID, body, type, author } = event;
-      if (type !== "message" || !body) return;
+      const { threadID, senderID, body, type } = event;
+
+      if (!body || type !== "message") return;
 
       if (!body.startsWith(config.prefix)) return;
+
       const [cmd, ...args] = body.slice(config.prefix.length).trim().split(" ");
 
-      // ---- Admin Only Commands ----
+      // ---- Admin-only commands ----
       if (senderID !== config.adminID) {
         return api.sendMessage("❌ Only Admin can use this bot.", threadID);
       }
@@ -100,13 +103,12 @@ async function initializeBot() {
           api.sendMessage("❓ Unknown command.", threadID);
       }
     });
-
   } catch (err) {
     console.error("Login failed:", err);
   }
 }
 
-// ---- Start Express ----
+// ---- Start Express Server ----
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🌍 Web UI running on http://localhost:${PORT}`);

@@ -1,9 +1,9 @@
 {
   "name": "waleed-bot",
   "version": "1.0.0",
-  "description": "Waleed Facebook Messenger Bot using ws3-fca",
+  "description": "Waleed Messenger Bot",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
